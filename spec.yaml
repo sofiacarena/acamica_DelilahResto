@@ -1,0 +1,463 @@
+openapi: "3.0.0"
+info:
+  version: "1.0.0"
+  title: "Delilah Restó"
+  description: "API for Delilah Restó. Allows to manage users, products and orders, according to different permissions. Access the server files in this [GitHub Repository](https://github.com/sofiacarena/acamica_DelilahResto)"
+  contact:
+    email: "sofiacarena97@gmail.com"
+tags:
+- name: "users"
+  description: "All user operations"
+- name: "products"
+  description: "Manage Delilah Restó products"
+- name: "orders"
+  description: "Access to Delilah Restó orders"
+paths:
+  /login:
+    post:
+      tags:
+      - "users"
+      summary: "Validate user and password"
+      operationId: "validateUser"
+      requestBody:
+        description: "User login object"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties:
+                username/email:
+                  type: "string"
+                password:
+                  type: "string"
+                  format: "password"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  token:
+                    type: "string"
+        400:
+          description: "Missing obligatory fields"
+        401:
+          description: "Login failed: Incorrect username, email or password"
+  /users:
+    post:
+      tags:
+      - "users"
+      summary: "Add a new user"
+      operationId: "addUser"
+      requestBody:
+        description: "New user object"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        201:
+          description: "User created successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                  user:
+                    type: "object"
+                    properties:
+                      username:
+                        type: "string"
+                      fullname:
+                        type: "string"
+                      email:
+                        type: "string"
+                      address:
+                        type: "string"
+        400:
+          description: "Missing obligatory fields"
+        409:
+          description: "Username or email already exist"
+    get:
+      tags:
+      - "users"
+      summary: "Retrieve all users"
+      operationId: "getUser"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items: 
+                  $ref: "#/components/schemas/User"
+      security:
+      - Authorization: []
+  /products:
+    post:
+      tags:
+      - "products"
+      summary: "Add a new product"
+      operationId: "addProduct"
+      requestBody:
+        description: "New product object"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        201:
+          description: "Product created successfully"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                  product:
+                    type: "object"
+                    properties:
+                      product_name:
+                        type: "string"
+                      description:
+                        type: "string"
+                      price:
+                        type: "integer"
+                        format: "int32"
+        400:
+          description: "Missing obligatory fields"
+        409:
+          description: "Product already exist"
+      security:
+      - Authorization: []
+    get:
+      tags:
+      - "products"
+      summary: "Retrieve all products"
+      operationId: "getAllProducts"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items: 
+                  $ref: '#/components/schemas/Product'
+      security:
+      - Authentication: []
+  /products/{id}:
+    get:
+      tags:
+      - "products"
+      summary: "Retrieve product by product Id"
+      description: ""
+      operationId: "getProductById"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of product to get"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "integer"
+              format: "int32"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        404:
+          description: "Product couldn't be found"
+      security:
+      - Authentication: []
+    put:
+      tags:
+      - "products"
+      summary: "Update product by product Id"
+      operationId: "updateProduct"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of product to update"
+        required: true
+        content:
+          application/json:
+           schema:
+            type: "integer"
+            format: "int32"
+      requestBody:
+        description: "Product object"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        200:
+          description: "Product edited successfully"
+        400:
+          description: "Missing required values"
+        404:
+          description: "Product couldn't be found"
+        409:
+          description: "Product with this product name already exists"
+      security:
+      - Authorization: []
+    delete:
+      tags:
+      - "products"
+      summary: "Delete product by product Id"
+      operationId: "deleteProduct"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of product to delete"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "integer"
+              format: "int32"
+      responses:
+        204:
+          description: "No Content"
+        404:
+          description: "Product couldn't be found"
+      security:
+      - Authorization: []
+  /orders:
+    post:
+      tags:
+      - "orders"
+      summary: "Add a new order"
+      operationId: "addOrder"
+      requestBody:
+        description: "New order object"
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                order:
+                  type: "object"
+                  properties:
+                    payment:
+                      type: "string"
+                order_items:
+                  $ref: '#/components/schemas/Order_items'
+      responses:
+        201:
+          description: "Created. Order made successfully"
+        404:
+          description: "User/Product could not be found"
+      security:
+      - Authentication: []
+    get: 
+      tags:
+      - "orders"
+      summary: "Retrive all orders/orders by user id"
+      description: "When the logged in user is an admin, the result of the request gives all orders made. If the user is not an admin, the path returns all orders made by the user id of the logged in user. The response has the same scheme in both cases, but the amount of answers will depend on the user"
+      operationId: "getAllOrders"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Order"
+        404:
+          description: "Not found"
+      security:
+      - Authentication: []
+  /orders/{id}:
+    get:
+      tags:
+      - "orders"
+      summary: "Retrieve order by order Id"
+      operationId: "getOrderById"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of order to update"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "integer"
+              format: "int64"
+      responses: 
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        404:
+          description: "Order could not be found"
+      security:
+      - Authorization: []
+    put:
+      tags:
+      - "orders"
+      summary: "Update order status by order Id"
+      operationId: "updateOrderStatus"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of order to update"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "integer"
+              format: "int64"
+      requestBody:
+        description: "Order status object"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "object"
+              properties: 
+                status:
+                  type: "string"
+      responses:
+        200:
+          description: "Order status edited successfully"
+        400:
+          description: "Missing required value"
+        404:
+          description: "Order could not be found"
+      security:
+      - Authorization: []
+    delete:
+      tags:
+      - "orders"
+      summary: "Delete order by order Id"
+      operationId: "deleteOrder"
+      parameters:
+      - name: "id"
+        in: "path"
+        description: "ID of order to delete"
+        required: true
+        content:
+          application/json:
+            schema:
+              type: "integer"
+              format: "int64"
+      responses:
+        204:
+          description: "No Content"
+        404:
+          description: "Order couldn't be found"
+      security:
+      - Authorization: []
+
+components:   
+  securitySchemes:
+      Authentication:
+        type: "http"
+        scheme: "bearer"
+        description: "JWT of an admin or non admin user"
+        bearerFormat: "json web token"
+      Authorization:
+        type: "http"
+        scheme: "bearer"
+        description: "JWT of an admin user"
+        bearerFormat: "json web token"   
+  schemas:
+    User:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          readOnly: true
+        username:
+          type: "string"
+        fullname:
+          type: "string"
+        email:
+          type: "string"
+        password:
+          type: "string"
+          format: "password"
+          writeOnly: true
+        address:
+          type: "string"
+        created_at:
+          type: "string"
+          format: "date-time"
+          readOnly: true
+        admin:
+          type: "boolean"
+          default: false
+          readOnly: true
+    Product:
+      type: "object"
+      required: ["product_name", "price"]
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+          readOnly: true
+        product_name:
+          type: "string"
+        description:
+          type: "string"
+        price:
+          type: "integer"
+          format: "int32"
+    Order:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          readOnly: true
+        user_id:
+          type: "integer"
+          format: "int64"
+        fullname:
+          type: "string"
+        address:
+          type: "string"
+        items:
+          type: "string"
+        price:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+        payment:
+          type: "string"
+        created_at:
+          type: "string"
+          format: "date-time"
+          readOnly: true
+    Order_items:
+      type: "array"
+      items:
+        type: "object"
+        properties:
+          product_id:
+            type: "integer"
+            format: "int32"
+          quantity:
+            type: "integer"
+            format: "int32"
