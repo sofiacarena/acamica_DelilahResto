@@ -13,14 +13,16 @@ npm install
 
 Verifique que cualquier comando se haga teniendo la carpeta raíz del proyecto como current directory.
 ### 2. XAMPP
-Este proyecto también trabaja con XAMPP. De no tenerlo, se lo puede descargar e instalar de https://www.apachefriends.org/es/index.html
+Este proyecto también trabaja con XAMPP. De no tenerlo, se lo puede descargar e instalar de https://www.apachefriends.org/es/index.html.
 En el panel de control de este sistema, se requiere que los módulos Apache y MySQL esten activados para poder operar con la base de datos.
 ### 3. Configuración de datos de conexión a la base de datos
-En el archivo config.js de la carpeta db se encuentran los datos de conexión a la base de datos. De ser necesario, pueden ser editados en ese archivo. Estos son:
+En el archivo **config.js** de la carpeta **db** se encuentran los datos de conexión a la base de datos. De ser necesario, pueden ser editados en ese archivo. Estos son:
 ```
-NAME = 'delilahresto';    // database name
-USER = 'root';            // user name
-PASSWORD = '';            // password
+NAME = 'delilahresto';    // nombre de la base de datos
+USER = 'root';            // usuario
+PASSWORD = '';            // contraseña
 HOST = 'localhost';       // host
-PORT = '3306';            // database port number
+PORT = '3306';            // numero del puerto
 ```
+### 4. Instalación de base de datos
+Acceder a http://localhost/phpmyadmin/ desde el navegador para poder crear la base de datos. En el panel de la izquierda, se debe seleccionar "Nueva" y en la sección que se abre crear una nueva base de datos con el nombre que se encuentra en el archivo **config.js**, mencionado en el paso anterior.
