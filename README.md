@@ -37,12 +37,10 @@ node db/user_admin.js
 ```
 Los datos para poder acceder con los usuarios admin son:
 ```
-Admin 1
   {
     username: "SuperAdmin",
     password: "pass"
-  }
-Admin 2
+  },
   {
     username: "SuperAdmin2",
     password: "pass"
