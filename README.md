@@ -25,4 +25,32 @@ HOST = 'localhost';       // host
 PORT = '3306';            // numero del puerto
 ```
 ### 4. Instalación de base de datos
-Acceder a http://localhost/phpmyadmin/ desde el navegador para poder crear la base de datos. En el panel de la izquierda, se debe seleccionar "Nueva" y en la sección que se abre crear una nueva base de datos con el nombre que se encuentra en el archivo **config.js**, mencionado en el paso anterior.
+Acceder a http://localhost/phpmyadmin/ desde el navegador para poder crear la base de datos. 
+En el panel de la izquierda, se debe seleccionar "Nueva" y en la sección que se abre crear una nueva base de datos con el nombre que se encuentra en el archivo **config.js**, mencionado en el paso anterior.
+#### 4.1 Comando para crear las tablas
+```
+node db/tables.js
+```
+#### 4.2 Comando para crear dos usuarios admin
+```
+node db/user_admin.js
+```
+Los datos para poder acceder con los usuarios admin son:
+```
+Admin 1
+  {
+    username: "SuperAdmin",
+    password: "pass"
+  }
+Admin 2
+  {
+    username: "SuperAdmin2",
+    password: "pass"
+  }
+```
+#### 4.3 Comando para crear cuatro productos (opcional)
+```
+node db/products.js
+```
+## Documentación 
+Para más información sobre como interactuar con los endpoints de este proyecto, remitirse a la documentación que se encuentra en el archivo **spec.yaml** y puede abrirse en [Swagger Editor](https://editor.swagger.io/)
