@@ -1,6 +1,7 @@
+// queries to create db tables
 
 const Sequelize = require('sequelize');
-const sequelize = require('./server.js');
+const sequelize = require('../server.js');
 
 const queries = [
     {
