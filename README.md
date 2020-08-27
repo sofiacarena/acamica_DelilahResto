@@ -48,9 +48,9 @@ Admin 2
     password: "pass"
   }
 ```
-#### 4.3 Comando para crear cuatro productos (opcional)
+#### 4.3 Comando para crear un pedido y cuatro productos (opcional)
 ```
-node db/products.js
+node db/test_data.js
 ```
 ## Documentación 
 Para más información sobre como interactuar con los endpoints de este proyecto, remitirse a la documentación que se encuentra en el archivo **spec.yaml** y puede abrirse en [Swagger Editor](https://editor.swagger.io/)
