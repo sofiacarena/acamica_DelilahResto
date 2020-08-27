@@ -18,13 +18,15 @@ const DB = require('./db/config');
 
 // Connection to db             
 const sequelize = new Sequelize(`${DB.DIALECT}://${DB.USER}:${DB.PASSWORD}@${DB.HOST}:${DB.PORT}/${DB.NAME}`);
-module.exports = sequelize;
 
 sequelize.authenticate().then(() => {
     console.log('Connection established successfully.');
 }).catch(err => {
     console.error('Unable to connect to the database:', err);
 });
+
+//export sequelize
+module.exports = sequelize;
 
 // Handles server errors
 function handleError(err, req, res, next) {
@@ -200,7 +202,7 @@ app.get('/products/:id', validateUser, (req,res) => {
     ).then((response) => {
         //checks if the product by id sent in the request exists
         if (response.length == 0) { 
-            throw new Error (`Product ${[response].id} couldn't be found`);
+            throw new Error (`Product ${id} couldn't be found`);
         }
         //when the product exists answers the one that was found
         res.status(200).json(response);
@@ -218,7 +220,7 @@ app.put('/products/:id', adminAuth, (req, res) => {
         return;
     }
     // checks the existence of the product by the id sent
-    sequelize.query('SELECT * FROM products WHERE id = ?',
+    sequelize.query('SELECT * FROM products WHERE id = ? ',
         {replacements: [id], type: sequelize.QueryTypes.SELECT, raw: true }
     ).then((response) =>{
         // if the product doesn´t exists, returns an error
@@ -226,11 +228,23 @@ app.put('/products/:id', adminAuth, (req, res) => {
             res.status(404);
             throw new Error (`Product with id = ${id} could not be found`);
         }
-        // when the product by id is found, makes the edition
-        sequelize.query(`UPDATE products SET product_name = "${product_name}", description = "${description}", price = "${price}" WHERE id = ?`, 
-            {replacements: [id]}
-        ).then((response) => { 
-            res.status(200).send('Product edited successfully')
+        // checks the existence of a product by the product name sent
+        sequelize.query('SELECT * FROM products WHERE product_name = ? ',
+            {replacements: [product_name], type: sequelize.QueryTypes.SELECT, raw: true }
+        ).then((response) =>{
+            // if product name exists in other product, returns error
+            if (response[0].id != id){
+                res.status(409);
+                throw new Error (`Product with the product name sent already exists`);
+            }
+            // when the product by id is found and the product name is not in other product, makes the edition
+            sequelize.query(`UPDATE products SET product_name = "${product_name}", description = "${description}", price = "${price}" WHERE id = ?`, 
+                {replacements: [id]}
+            ).then((response) => { 
+                res.status(200).send('Product edited successfully')
+            });
+        }).catch(function(err){
+            res.json({error: err.message});
         });
     }).catch(function(err){
         res.json({error: err.message});
@@ -263,17 +277,18 @@ app.delete('/products/:id', adminAuth, (req, res) => {
 
 //  Create Order
 app.post('/orders', validateUser, (req, res) => {
+    const tokenData = req.tokenData
     const {order, order_items} = req.body;
     // checks if the user with the id sent in the order exists
     sequelize.query('SELECT id FROM users WHERE id = ?',
-        {replacements: [order.user_id], type: sequelize.QueryTypes.SELECT, raw: true}
+        {replacements: [tokenData.id], type: sequelize.QueryTypes.SELECT, raw: true}
     ).then( async function (response) {
         var price = 0;
         try {
             // if there´s no user with the id sent, throws a not found error
             if (response.length == 0){
                 res.status(404)
-                throw new Error (`User with id = ${order.user_id} could not be found`);
+                throw new Error (`User with id = ${tokenData.id} could not be found`);
             }
             // when the user exists 
             await Promise.all(order_items.map(async (item) => {
@@ -290,7 +305,7 @@ app.post('/orders', validateUser, (req, res) => {
             }))
             // after the price of the whole order is obtained, creates the order
             sequelize.query('INSERT INTO orders (user_id, price, status, payment) VALUES (?, ?, ?, ?)',
-                {replacements: [order.user_id, price, "nuevo", order.payment]}
+                {replacements: [tokenData.id, price, "nuevo", order.payment]}
             ).then((response) => {
                 // creates a register for every ordered item
                 order_items.forEach(item => {
@@ -303,6 +318,30 @@ app.post('/orders', validateUser, (req, res) => {
             res.json({ error: err.message });
         }
     }); 
+});
+//  Get all orders for admin or all orders for user id
+app.get('/orders', validateUser, (req, res) => {
+    const tokenData = req.tokenData;
+    // when the user logged in is an admin, returns all orders
+    if (tokenData.admin == 1){
+        sequelize.query('SELECT orders.*, users.fullname, users.address, GROUP_CONCAT(order_items.quantity, "x", products.product_name SEPARATOR " ") AS "items" FROM orders JOIN users ON orders.user_id = users.id JOIN order_items ON orders.id = order_items.order_id JOIN products ON order_items.product_id = products.id GROUP BY order_items.order_id',
+            {type: sequelize.QueryTypes.SELECT, raw: true}
+        ).then((response) => {
+            res.status(200).json(response);
+        }).catch(function (err){
+            res.status(404).json({ error: err.message});
+        });
+    } 
+    // when the user logged in is not an admin, returns all orders made by that user
+    else if (tokenData.admin == 0){
+        sequelize.query('SELECT orders.*, users.fullname, users.address, GROUP_CONCAT(order_items.quantity, "x", products.product_name SEPARATOR " ") AS "items" FROM orders JOIN users ON orders.user_id = users.id JOIN order_items ON orders.id = order_items.order_id JOIN products ON order_items.product_id = products.id WHERE orders.user_id = ? GROUP BY order_items.order_id',
+            {replacements: [tokenData.id],type: sequelize.QueryTypes.SELECT, raw: true}
+        ).then((response) => {
+            res.status(200).json(response);
+        }).catch(function (err){
+            res.status(404).json({ error: err.message});
+        })
+    }
 });
 //  Get all orders for admin or all orders for user id
 app.get('/orders', validateUser, (req, res) => {
